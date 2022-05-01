@@ -1,0 +1,48 @@
+{
+  "variables": {
+    "version": "0.1.{{timestamp}}",
+    "cloud_token": "{{ env `VAGRANT_CLOUD_TOKEN` }}"
+  },
+  "builders": [
+    {
+      "type": "vagrant",
+      "communicator": "ssh",
+      "source_path": "ubuntu/focal64",
+      "add_force": true,
+      "provider": "virtualbox",
+      "box_name": "ksaritek/rdma-playground",
+      "output_vagrantfile": "Vagrantfile"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "scripts/rxe.service",
+      "destination": "/tmp/rxe.service"
+    },
+    {
+      "type": "file",
+      "source": "scripts/rxe_all.sh",
+      "destination": "/tmp/rxe_all.sh"
+    },
+    {
+      "type": "shell",
+      "execute_command": "{{.Vars}} sudo -E -S bash '{{.Path}}'",
+      "scripts": [
+        "scripts/setup-vm.sh",
+        "scripts/cleanup.sh"
+      ]
+    }
+  ],
+  "post-processors": [
+    [
+      {
+        "type": "vagrant-cloud",
+        "box_tag": "ksaritek/rdma-playground",
+        "version": "{{user `version`}}",
+        "access_token": "{{user `cloud_token`}}",
+        "no_release": "true"
+      }
+    ]
+  ]
+}
